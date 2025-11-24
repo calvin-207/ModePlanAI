@@ -5,7 +5,7 @@
 """
 
 from rest_framework import serializers
-from system.models import LoginLog
+from tenants.models import LoginLog
 from utils.serializers import CustomModelSerializer
 from utils.viewset import CustomModelViewSet
 from utils.jsonResponse import SuccessResponse, ErrorResponse
