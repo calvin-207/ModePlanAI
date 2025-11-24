@@ -10,7 +10,7 @@ from django.urls.resolvers import ResolverMatch
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from user_agents import parse
 
-from system.models import LoginLog
+from tenants.models import LoginLog
 
 
 def get_request_user(request):
@@ -208,8 +208,7 @@ def save_login_log(request, status=True, msg="", user=None):
     analysis_data["agent"] = str(parse(request.META["HTTP_USER_AGENT"]))
     analysis_data["browser"] = get_browser(request)
     analysis_data["os"] = get_os(request)
-    analysis_data["creator_id"] = user_id
-    analysis_data["dept_belong"] = getattr(request.user, "dept_id", "")
+    analysis_data["global_user_id"] = user_id
     analysis_data["status"] = status
     analysis_data["msg"] = msg
     LoginLog.objects.create(**analysis_data)

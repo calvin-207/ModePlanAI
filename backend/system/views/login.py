@@ -78,6 +78,7 @@ class LoginView(CustomAPIView):
 
     def post(self, request):
         username = request.data.get("username", None)
+        # 这个密码要混淆下
         password = request.data.get("password", None)
         captchaKey = request.data.get("captchaKey", None)
         captcha = request.data.get("captcha", None)

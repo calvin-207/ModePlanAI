@@ -61,10 +61,11 @@ class GlobalUsers(AbstractBaseUser, BaseModel):
         ordering = ('-create_datetime',)
 
 
-class LoginLog(CoreModel):
+class LoginLog(BaseModel):
     LOGIN_TYPE_CHOICES = (
         (1, '后台登录'),
     )
+    global_user = models.ForeignKey(GlobalUsers, on_delete=models.CASCADE, verbose_name="全局用户", null=True, blank=True, help_text="全局用户")
     username = models.CharField(max_length=32, verbose_name="登录用户名", null=True, blank=True, help_text="登录用户名")
     ip = models.CharField(max_length=32, verbose_name="登录ip", null=True, blank=True, help_text="登录ip")
     agent = models.CharField(max_length=1500,verbose_name="agent信息", null=True, blank=True, help_text="agent信息")
