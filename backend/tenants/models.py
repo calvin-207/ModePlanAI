@@ -27,29 +27,36 @@ class GlobalUsers(AbstractBaseUser, BaseModel):
         (2, "男"),
     )
 
-    IDENTITY_CHOICES = (
-        (0, "超级管理员"),
-        (1, "系统管理员"),
-        (2, "前端用户"),
-    )
     username = models.CharField(max_length=64, unique=True, db_index=True, verbose_name='用户账号', help_text="用户账号")
+
     email = models.EmailField(max_length=60, verbose_name="邮箱", null=True, blank=True, help_text="邮箱")
+
     mobile = models.CharField(max_length=30,verbose_name="电话", null=True, blank=True, help_text="电话")
+
     avatar = models.CharField(max_length=200,verbose_name="头像", null=True, blank=True, help_text="头像")
+
     name = models.CharField(max_length=40, verbose_name="姓名", help_text="姓名")
+
     nickname = models.CharField(max_length=100, help_text="用户昵称", verbose_name="用户昵称",default="", null=True, blank=True)
+
     gender = models.SmallIntegerField(choices=GENDER_CHOICES, verbose_name="性别", null=True, blank=True, help_text="性别",default=0)
     
     login_error_nums = models.IntegerField(default=0, verbose_name="登录错误次数", help_text="登录错误次数")
-    identity = models.SmallIntegerField(choices=IDENTITY_CHOICES, verbose_name="身份标识", null=True, blank=True, default=2,help_text="身份标识")
+
+
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='钱包余额')
     is_active = models.BooleanField(verbose_name="状态",default=True)
-    is_staff = models.BooleanField(verbose_name="是否员工",default=False)
-    is_superuser = models.BooleanField(verbose_name="是否超级管理员", default=False)
+
     # 是否是游客模式
     is_guest = models.BooleanField(verbose_name="是否游客模式", default=False)
 
+    # 当前正在使用的对应租户的信息
+    system_users = models.ForeignKey("system.Users", blank=True, null=True, verbose_name='当前账号的企业用户', on_delete=models.PROTECT)
+
+    clients = models.ManyToManyField(Client, through="GlobalUserClientRelation", related_name="global_users", verbose_name="当前账号的租户关联信息")
+
     objects = UserManager()
+
     EMAIL_FIELD = "email"
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []
@@ -59,6 +66,23 @@ class GlobalUsers(AbstractBaseUser, BaseModel):
         verbose_name = '全局用户表'
         verbose_name_plural = verbose_name
         ordering = ('-create_datetime',)
+
+
+# 自定义中间模型（手动创建的中间表）
+class GlobalUserClientRelation(BaseModel):
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name="关联租户")
+    globalUsers = models.ForeignKey(GlobalUsers, on_delete=models.CASCADE, verbose_name="关联用户")
+    is_active = models.BooleanField(verbose_name='是否激活状态', default=1)
+    active_datetime = models.DateTimeField(verbose_name="激活时间", blank=True, null=True)
+
+
+    class Meta:
+        # 可选：设置联合唯一约束（避免同一书籍和作者重复关联）
+        verbose_name = "租户-全局用户的关联记录"
+        verbose_name_plural = "租户-全局用户的关联记录"
+
+    def __str__(self):
+        return f"{self.client.name} - {self.globalUsers.name}"
 
 
 class LoginLog(BaseModel):
