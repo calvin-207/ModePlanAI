@@ -26,7 +26,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             self.room_group_name = f"notifications_{room_name}"
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
-            await self.accept("JWTLYADMIN")
+            await self.accept("JWTLEEADMIN")
 
             unread_count = await _get_message_unread_count(self.user)
             if unread_count == 0:

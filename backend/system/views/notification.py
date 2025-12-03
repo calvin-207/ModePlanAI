@@ -206,9 +206,9 @@ class NotificationViewSet(CustomModelViewSet):
         """
         获取自己的接收消息
         """
-        user = self.request.user
+        system_user = self.request.user.system_user
         queryset = NotificationUsers.objects.filter(
-            user=user, is_delete=False
+            user=system_user, is_delete=False
         ).order_by("-id")
         filterset = NotificationUsersFilterSet(request.query_params, queryset=queryset)
         queryset = filterset.qs
@@ -240,13 +240,13 @@ class NotificationViewSet(CustomModelViewSet):
         reqData = get_parameter_dic(request)
         id = reqData.get("id")
         type = reqData.get("type", "")
-        user = self.request.user
+        system_user = self.request.user.system_user
         if not type:
-            NotificationUsers.objects.filter(id=id, user=user, is_read=False).update(
+            NotificationUsers.objects.filter(id=id, user=system_user, is_read=False).update(
                 is_read=True, read_at=datetime.datetime.now()
             )
         elif type == "ALL":
-            NotificationUsers.objects.filter(user=user, is_read=False).update(
+            NotificationUsers.objects.filter(user=system_user, is_read=False).update(
                 is_read=True, read_at=datetime.datetime.now()
             )
         return DetailResponse(msg="设置成功")

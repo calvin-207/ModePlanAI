@@ -7,7 +7,7 @@ import json
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import AnonymousUser
 from django.urls.resolvers import ResolverMatch
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from utils.jwt_auth import JWTAuthentication
 from user_agents import parse
 
 from tenants.models import LoginLog

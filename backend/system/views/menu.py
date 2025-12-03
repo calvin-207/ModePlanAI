@@ -157,11 +157,11 @@ class MenuViewSet(CustomModelViewSet):
     # @action(methods=['get'],extra_filter_backends=[],detail=False,step_permission=True)#会自动生成/api/system/menu/web_router/的路由
     def web_router(self, request):
         """用于前端获取当前角色的路由"""
-        user = request.user
-        if user.is_superuser:
+        system_user = request.user.system_user
+        if system_user.is_superuser:
             queryset = self.queryset.filter(status=True).order_by("sort")
         else:
-            role_ids = user.role.values_list("id", flat=True)
+            role_ids = system_user.role.values_list("id", flat=True)
             menuIds = RoleMenuPermission.objects.filter(role__in=role_ids).values_list(
                 "menu_id", flat=True
             )

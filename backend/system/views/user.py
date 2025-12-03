@@ -6,9 +6,11 @@
 
 import re
 from django.contrib.auth.hashers import make_password
+from django.db.models import Q
 from rest_framework import serializers
 
 from system.models import Users, Role
+from tenants.models import GlobalUsers
 from utils.jsonResponse import SuccessResponse, ErrorResponse, DetailResponse
 from utils.permission import CustomPermission
 from utils.serializers import CustomModelSerializer
@@ -185,7 +187,7 @@ class UserViewSet(CustomModelViewSet):
     后台管理员用户接口:
     """
 
-    queryset = Users.objects.filter(identity=1, is_delete=False).order_by(
+    queryset = Users.objects.filter(Q(identity=1)|Q(identity=2)).order_by(
         "-create_datetime"
     )
     serializer_class = UserSerializer
@@ -227,40 +229,41 @@ class UserViewSet(CustomModelViewSet):
 
     def user_info(self, request):
         """获取当前用户信息"""
-        user = request.user
-        if not user.identity in [0, 1]:
+        system_user = request.user.system_user
+        if not system_user.identity in [0, 1]:
             return ErrorResponse(msg="用户类型错误")
         department = ""
-        dept_id = user.dept_id
+        dept_id = system_user.dept_id
         if dept_id:
-            department = user.dept.name
+            department = system_user.dept.name
         result = {
-            "id": user.id,
-            "avatar": user.avatar,
-            "nickname": user.nickname,
-            "name": user.name,
-            "mobile": user.mobile,
-            "gender": user.gender,
-            "email": user.email,
+            "id": request.user.id,
+            "system_user_id": system_user.id,
+            "avatar": system_user.avatar,
+            "nickname": system_user.nickname,
+            "name": system_user.name,
+            "mobile": system_user.mobile,
+            "gender": system_user.gender,
+            "email": system_user.email,
             "dept_id": dept_id,
             "department": department,
-            "is_superuser": user.is_superuser,
-            "identity": user.identity,
-            "create_datetime": formatdatetime(user.create_datetime),
-            "last_login": formatdatetime(user.last_login),
+            "is_superuser": system_user.is_superuser,
+            "identity": system_user.identity,
+            "create_datetime": formatdatetime(system_user.create_datetime),
+            "last_login": formatdatetime(system_user.last_login),
         }
-        role = getattr(user, "role", None)
+        role = getattr(system_user, "role", None)
         if role:
             result["role_info"] = role.values("id", "name", "key")
-        if user.is_superuser:
+        if system_user.is_superuser:
             result["role_info"] = [{"id": "", "name": "超级管理员", "key": ""}]
             result["department"] = "超级管理员"
         return DetailResponse(data=result, msg="获取成功")
 
     def update_user_info(self, request):
         """修改当前用户信息"""
-        user = request.user
-        if not user.identity in [0, 1]:
+        system_user = request.user.system_user
+        if not system_user.identity in [0, 1]:
             return ErrorResponse(msg="用户类型错误")
         reqData = request.data
         email = reqData.get("email")
@@ -283,7 +286,7 @@ class UserViewSet(CustomModelViewSet):
             "mobile": mobile,
             "nickname": nickname,
         }
-        Users.objects.filter(id=user.id).update(**newReqData)
+        Users.objects.filter(id=system_user.id).update(**newReqData)
         return DetailResponse(data=None, msg="修改成功")
 
     def reset_password(self, request, pk):
@@ -297,19 +300,20 @@ class UserViewSet(CustomModelViewSet):
             Response: 操作结果响应
         """
         # 1. 权限验证
-        if not request.user.is_superuser:
+        print("TODO 这个是需要进行验证的，判断这个PK，是属于globalUser，还是systemUser的信息！！！")
+        if not request.user.system_user.is_superuser:
             return ErrorResponse(msg="只允许超级管理员进行密码重置操作")
 
         try:
             # 2. 获取用户实例
-            user = Users.objects.get(id=pk)
+            globalUser = GlobalUsers.objects.get(id=pk)
 
             data = request.data
             new_pwd = data.get("newPassword")
-            user.password = make_password(new_pwd)
+            globalUser.password = make_password(new_pwd)
             # 3. 保存
             with transaction.atomic():
-                user.save()
+                globalUser.save()
 
             # 4. 返回成功响应
             return DetailResponse(msg="设置成功")
@@ -321,10 +325,10 @@ class UserViewSet(CustomModelViewSet):
 
     def change_password(self, request, *args, **kwargs):
         """密码修改"""
-        user = request.user
-        if not user.identity in [0, 1]:
+        system_user = request.user.system_user
+        if not system_user.identity in [0, 1]:
             return ErrorResponse(msg="用户类型错误")
-        instance = Users.objects.filter(id=user.id, identity__in=[0, 1]).first()
+        instance = Users.objects.filter(id=system_user.id, identity__in=[0, 1]).first()
         data = request.data
         old_pwd = data.get("currentPassword")
         new_pwd = data.get("newPassword")
@@ -345,10 +349,10 @@ class UserViewSet(CustomModelViewSet):
 
     def change_avatar(self, request, *args, **kwargs):
         """头像修改"""
-        user = request.user
-        if not user.identity in [0, 1]:
+        system_user = request.user.system_user
+        if not system_user.identity in [0, 1]:
             return ErrorResponse(msg="用户类型错误")
-        instance = Users.objects.filter(id=user.id, identity__in=[0, 1]).first()
+        instance = Users.objects.filter(id=system_user.id, identity__in=[0, 1]).first()
         data = request.data
         avatar = data.get("avatar")
         if instance:

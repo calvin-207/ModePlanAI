@@ -100,7 +100,7 @@ class CustomPermission(BasePermission):
 
     def has_permission(self, request, view):
         # 超级管理员放行
-        if request.user.is_superuser:
+        if request.user.system_user.is_superuser:
             return True
 
         # 白名单
@@ -243,13 +243,13 @@ class CustomPermission(BasePermission):
     def _check_api_permission(self, request) -> bool:
         """核心权限验证逻辑"""
         # 无角色用户拒绝
-        if not hasattr(request.user, "role"):
+        if not hasattr(request.user.system_user, "role"):
             return False
 
         # 获取用户所有权限（使用缓存）
-        role_ids = request.user.role.values_list("id", flat=True)
+        role_ids = request.user.system_user.role.values_list("id", flat=True)
         user_permissions = APIPermissionValidator.get_user_permissions(
-            request.user.id, role_ids
+            request.user.system_user.id, role_ids
         )
 
         # 检查当前请求是否匹配任一权限
@@ -282,13 +282,3 @@ class CustomPermission(BasePermission):
         if re.fullmatch(pattern, request_path):
             return True
         return False
-
-
-# # 使用示例：在视图中标记无需自定义权限的方法
-# class SomeViewSet(viewsets.ModelViewSet):
-#     permission_classes = [CustomPermission]
-
-#     @action(detail=False, methods=['get'], step_permission=True)
-#     def public_list(self, request):
-#         """无需权限的公开接口"""
-#         ...

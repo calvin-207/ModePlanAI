@@ -304,9 +304,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PAGINATION_CLASS": "utils.pagination.CustomPagination",  # 自定义分页
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-        # "rest_framework_simplejwt.authentication.JWTTokenUserAuthentication",
-        # "rest_framework.authentication.SessionAuthentication",
+        "utils.jwt_auth.JWTAuthentication",
     ),
     # 限速设置
     "DEFAULT_THROTTLE_CLASSES": (

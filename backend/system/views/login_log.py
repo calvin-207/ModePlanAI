@@ -67,7 +67,7 @@ class LoginLogViewSet(CustomModelViewSet):
         user = request.user
         queryset = self.filter_queryset(self.get_queryset())
         queryset = queryset.filter(
-            Q(creator=user) | Q(username=user.username)
+            Q(global_user=user) | Q(username=user.username)
         ).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -77,8 +77,8 @@ class LoginLogViewSet(CustomModelViewSet):
         return SuccessResponse(data=serializer.data, msg="获取成功")
 
     def deletealllogs(self, request):
-        user = request.user
-        if user.is_superuser:
+        system_user = request.user.system_user
+        if system_user.is_superuser:
             LoginLog.objects.all().delete()
             return SuccessResponse(msg="清空成功")
         return ErrorResponse(msg="您没有权限执行此操作，需要超级管理员权限")

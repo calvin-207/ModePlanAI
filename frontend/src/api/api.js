@@ -17,6 +17,12 @@ const Api = {};
 Api.getCaptcha = (params) => ajaxGet({ url: `/api/captcha/`, params });
 // 登录
 Api.getToken = (params) => ajaxPost({ url: `/api/token/`, params });
+// 游客模式激活
+Api.guestActivate = (params) => ajaxPost({ url: `/api/system/guest/activate/`, params });
+// 发送手机验证码
+Api.sendPhoneCode = (params) => ajaxPost({ url: `/api/system/phone_login/send_code/`, params });
+// 手机验证码登录
+Api.phoneLogin = (params) => ajaxPost({ url: `/api/system/phone_login/login/`, params });
 // 刷新登录token
 Api.refreshToken = (params) => ajaxPost({ url: `/api/token/refresh/`, params });
 // 获取菜单

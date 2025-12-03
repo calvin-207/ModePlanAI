@@ -88,17 +88,18 @@ class DataLevelPermissionsFilter(BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         # 超级管理员直接返回所有数据
-        if request.user.is_superuser:
+        system_user = request.user.system_user
+        if system_user.is_superuser:
             return queryset
 
         # 0. 获取用户部门信息
-        user = request.user
-        user_dept_id = getattr(user, "dept_id", None)
+
+        user_dept_id = getattr(system_user, "dept_id", None)
 
         # 无部门用户只能查看自己的数据
         if not user_dept_id:
             return (
-                queryset.filter(creator=user)
+                queryset.filter(creator=system_user)
                 if hasattr(queryset.model, "creator")
                 else queryset.none()
             )
@@ -108,7 +109,7 @@ class DataLevelPermissionsFilter(BaseFilterBackend):
             return queryset
 
         # 2. 获取用户所有有效角色的数据权限
-        roles = user.role.filter(status=True)
+        roles = system_user.role.filter(status=True)
         if not roles.exists():  # 如果用户没有关联角色则返回本部门数据
             return queryset.filter(dept_belong_id=user_dept_id)
 
@@ -166,7 +167,7 @@ class DataLevelPermissionsFilter(BaseFilterBackend):
 
         # 4. 处理各权限级别
         if max_data_scope == 0:  # 仅本人数据
-            return queryset.filter(creator=user)
+            return queryset.filter(creator=system_user)
 
         # 5. 获取需要过滤的部门列表
         dept_ids = self._get_permitted_dept_ids(

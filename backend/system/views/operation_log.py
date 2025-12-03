@@ -88,9 +88,9 @@ class OperationLogViewSet(CustomModelViewSet):
     )
 
     def getOwnerLogs(self, request, *args, **kwargs):
-        user = request.user
+        system_user = request.user.system_user
         queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.filter(creator=user)
+        queryset = queryset.filter(creator=system_user)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, request=request)
@@ -99,8 +99,8 @@ class OperationLogViewSet(CustomModelViewSet):
         return SuccessResponse(data=serializer.data, msg="获取成功")
 
     def deletealllogs(self, request):
-        user = request.user
-        if user.is_superuser:
+        system_user = request.user.system_user
+        if system_user.is_superuser:
             OperationLog.objects.all().delete()
             return SuccessResponse(msg="清空成功")
         return ErrorResponse(msg="您没有权限执行此操作，需要超级管理员权限")

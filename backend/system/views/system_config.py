@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from utils.jsonResponse import SuccessResponse, ErrorResponse, DetailResponse
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from utils.jwt_auth import JWTAuthentication
 from utils.serializers import CustomModelSerializer
 from utils.viewset import CustomModelViewSet
 from rest_framework.permissions import IsAuthenticated

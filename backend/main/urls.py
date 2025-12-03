@@ -30,7 +30,7 @@ from drf_spectacular.views import (
 )
 from utils.permission import CustomPermission
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from utils.jwt_auth import JWTAuthentication
 
 # 自定义
 from utils.streamingmedia_response import streamingmedia_serve
@@ -85,6 +85,7 @@ if settings.DEBUG:
 urlpatterns += [
     # 管理后台的标准接口
     path("api/system/", include("system.urls")),
+    path("api/modeplan/", include("apps.modeplan.urls")),
     path("api/token/", LoginView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/captcha/", CaptchaView.as_view()),

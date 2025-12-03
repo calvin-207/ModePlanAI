@@ -51,7 +51,7 @@ class GlobalUsers(AbstractBaseUser, BaseModel):
     is_guest = models.BooleanField(verbose_name="是否游客模式", default=False)
 
     # 当前正在使用的对应租户的信息
-    system_users = models.ForeignKey("system.Users", blank=True, null=True, verbose_name='当前账号的企业用户', on_delete=models.PROTECT)
+    system_user_id = models.BigIntegerField("system.Users.ID", blank=True, null=True, help_text='当前账号的企业用户')
 
     clients = models.ManyToManyField(Client, through="GlobalUserClientRelation", related_name="global_users", verbose_name="当前账号的租户关联信息")
 
@@ -72,6 +72,7 @@ class GlobalUsers(AbstractBaseUser, BaseModel):
 class GlobalUserClientRelation(BaseModel):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name="关联租户")
     globalUsers = models.ForeignKey(GlobalUsers, on_delete=models.CASCADE, verbose_name="关联用户")
+    system_user_id = models.BigIntegerField("system.Users.ID", help_text='关联租户下的用户ID')
     is_active = models.BooleanField(verbose_name='是否激活状态', default=1)
     active_datetime = models.DateTimeField(verbose_name="激活时间", blank=True, null=True)
 
@@ -80,6 +81,7 @@ class GlobalUserClientRelation(BaseModel):
         # 可选：设置联合唯一约束（避免同一书籍和作者重复关联）
         verbose_name = "租户-全局用户的关联记录"
         verbose_name_plural = "租户-全局用户的关联记录"
+
 
     def __str__(self):
         return f"{self.client.name} - {self.globalUsers.name}"

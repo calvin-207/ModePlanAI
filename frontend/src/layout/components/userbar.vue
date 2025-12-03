@@ -186,7 +186,11 @@
 				cancelButtonText: '取消',
 				type: 'warning'
 			}).then(() => {
+				const guestName = autoStorage.get('guestusername')
 				autoStorage.clearAll()
+				if (guestName) {
+					autoStorage.set('guestusername', guestName)
+				}
 				router.push('/login')
 				ElMessage.success('已退出登录!')
 			})

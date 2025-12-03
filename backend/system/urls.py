@@ -16,6 +16,7 @@ from system.views.role import RoleViewSet, RolePermissionViewSet
 from system.views.user import UserViewSet
 from system.views.menu_field import MenuFieldViewSet
 from system.views.frontend import SysImagesUploadView
+from system.views.login import GuestActivateView
 from system.views.dictionary import DictionaryViewSet
 from system.views.login_log import LoginLogViewSet
 from system.views.system_config import (
@@ -43,6 +44,7 @@ system_url.register(r"msg", NotificationViewSet)
 
 urlpatterns = [
     path("sys_image_upload/", SysImagesUploadView.as_view()),
+    path("guest/activate/", GuestActivateView.as_view()),
     re_path("menu/update_sort/", MenuViewSet.as_view({"post": "update_sort"})),
     re_path("menu_tree/", MenuViewSet.as_view({"get": "menu_tree"})),
     re_path(

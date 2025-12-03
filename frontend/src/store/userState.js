@@ -9,7 +9,7 @@ import {
   resetDynamicRoutes,
 } from "@/utils/routeGenerator";
 import { useKeepAliveStore } from "@/store/keepAlive";
-import defaultLogo from "@/assets/lee/imgs/logo.png";
+const defaultLogo = "/logo.png";
 
 export const useUserState = defineStore("userState", {
   state: () => {

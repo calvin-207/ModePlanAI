@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from utils.jwt_auth import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from utils.file_upload import ImageUpload
 from utils.jsonResponse import SuccessResponse,DetailResponse,ErrorResponse

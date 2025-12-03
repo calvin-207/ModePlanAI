@@ -35,11 +35,11 @@ class MenuButtonViewSet(CustomModelViewSet):
         """
         获取根据角色获取按钮权限
         """
-        is_superuser = request.user.is_superuser
+        is_superuser = request.user.system_user.is_superuser
         if is_superuser:
             queryset = MenuButton.objects.values_list("value", flat=True)
         else:
-            role_id = request.user.role.values_list("id", flat=True)
+            role_id = request.user.system_user.role.values_list("id", flat=True)
             queryset = (
                 RoleMenuButtonPermission.objects.filter(role__in=role_id)
                 .values_list("menu_button__value", flat=True)

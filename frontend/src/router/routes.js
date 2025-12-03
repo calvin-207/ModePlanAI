@@ -36,6 +36,17 @@ export const CustomStaticRoutes = [
       hidden: true,
     },
   },
+  {
+    path: "/figma-preview",
+    name: "FigmaPreview",
+    component: () => import("@/views/system/figma/preview.vue"),
+    meta: {
+      title: "Figma预览",
+      requireAuth: true,
+      hidden: false,
+      icon: 'Picture',
+    },
+  },
   // {
   // 	path: "/home",
   // 	name: 'home',
@@ -48,17 +59,17 @@ export const CustomStaticRoutes = [
   // 		affix: true//固定
   // 	}
   // },
-  // {
-  // 	path: "/PersonalCenter",
-  // 	name: 'PersonalCenter',
-  // 	component: () => import('@/views/system/usercenter/PersonalCenter.vue'),
-  // 	meta: {
-  // 		title: "个人中心",
-  // 		requireAuth: true,
-  // 		hidden:false,
-  // 		icon:'User',
-  // 	}
-  // },
+  {
+  	path: "/PersonalCenter",
+  	name: 'PersonalCenter',
+  	component: () => import('@/views/system/usercenter/PersonalCenter.vue'),
+  	meta: {
+  		title: "个人中心",
+  		requireAuth: true,
+  		hidden:true,
+  		icon:'User',
+  	}
+  },
   // {
   // 	path: "/PersonalCenters",
   // 	name: 'PersonalCenters',

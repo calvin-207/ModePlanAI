@@ -23,26 +23,34 @@
 			<!-- 登录表单区域 -->
 			<div class="login-content">
 				<!-- 品牌展示区 -->
-				<div class="brand-section">
-					<div class="logo-wrapper">
-						<lee-img
-							:alt="config.APP_NAME" 
-							:src="userState.sysConfig.logo"
-							class="logo-image"
-						/>
-					</div>
-					<h1 class="app-name">{{ config.APP_NAME }}</h1>
-					<p class="welcome-text">欢迎回来，请登录您的账户</p>
-				</div>
+                <div class="brand-section">
+                    <div class="logo-wrapper">
+                        <div class="monogram" aria-label="M">
+                            <svg viewBox="0 0 100 100" class="monogram-svg" role="img">
+                                <circle cx="50" cy="50" r="46" fill="transparent" />
+                                <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="64" font-weight="800" fill="#000">M</text>
+                            </svg>
+                        </div>
+                    </div>
+                    <h1 class="app-name">{{ config.APP_NAME }}</h1>
+                    <p class="welcome-text">欢迎回来，访问您的时尚工作区</p>
+                </div>
 				
-				<!-- 登录表单 -->
-				<div class="form-section">
-					<el-tabs class="auth-tabs">
-						<el-tab-pane label="账号密码登录" lazy>
-							<module-password-form />
-						</el-tab-pane>
-					</el-tabs>
-				</div>
+                <!-- 登录表单 -->
+                <div class="form-section">
+                    <el-tabs class="auth-tabs" v-model="activeTab">
+                        <el-tab-pane label="手机登录" name="sms" lazy>
+                            <module-phone-form />
+                        </el-tab-pane>
+                        <el-tab-pane label="账号登录" name="password" lazy>
+                            <module-password-form />
+                        </el-tab-pane>
+                        <el-tab-pane label="游客体验" lazy>
+                            <el-button type="primary" class="login-btn" style="width: 100%;" round @click="guestActivate">一键进入游客模式</el-button>
+                            <p style="margin-top:10px;color:var(--el-text-color-secondary);text-align:center;">将自动生成本地游客账号并持续使用</p>
+                        </el-tab-pane>
+                    </el-tabs>
+                </div>
 			</div>
 			<div class="login-footer">
 				<p class="copyright">© 2025 calvin-lee All rights reserved. <span class="version">v{{ config.APP_VER }}</span></p>
@@ -61,7 +69,11 @@
 	import ModulePasswordForm from './components/modulePasswordForm.vue'
 	import BeianInfo from './components/beian.vue'
 	import ParticlesBackground from '@/components/tsParticles.vue'
-	import {useUserState} from "@/store/userState";
+    import {useUserState} from "@/store/userState";
+    import Api from "@/api/api"
+    import { ElMessage, ElMessageBox } from 'element-plus'
+    import { autoStorage, generateRandomString, setToken, setRefreshToken } from '@/utils/util'
+    import ModulePhoneForm from './components/modulePhoneForm.vue'
 
 	const userState = useUserState()
 	const router = useRouter()
@@ -72,18 +84,58 @@
 		siteThemeStore.setSiteTheme(siteThemeStore.siteTheme === 'light' ? 'dark' : 'light')
 	}
 
-	onMounted(() => {
-		userState.getSystemConfig()
-		// 动态添加viewport meta标签
-		const viewportMeta = document.querySelector("meta[name='viewport']") || document.createElement('meta')
-		viewportMeta.name = 'viewport'
-		viewportMeta.content = "width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no"
-		document.head.appendChild(viewportMeta)
-	})
+    const activeTab = ref('sms')
 
-	const navigateToRegiter = () => {
-		router.push('/register')
-	}
+    onMounted(() => {
+        userState.getSystemConfig()
+        // 动态添加viewport meta标签
+        const viewportMeta = document.querySelector("meta[name='viewport']") || document.createElement('meta')
+        viewportMeta.name = 'viewport'
+        viewportMeta.content = "width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no"
+        document.head.appendChild(viewportMeta)
+    })
+
+    const navigateToRegiter = () => {
+        router.push('/register')
+    }
+
+    const API_BASE_URL = window.location.origin
+
+    function getOrCreateGuestUsername(){
+        let uname = autoStorage.get('guestusername')
+        if (uname && typeof uname === 'string' && uname.length >= 3) {
+            return uname
+        }
+        const dateStr = new Date().toISOString().slice(0,10).replace(/-/g,'')
+        uname = `guest_${dateStr}_${generateRandomString(8)}`
+        autoStorage.set('guestusername', uname)
+        return uname
+    }
+
+    async function guestActivate(){
+        const username = getOrCreateGuestUsername()
+        try{
+            await ElMessageBox.confirm('游客模式数据可能会被清理，是否继续？', '提示', {
+                confirmButtonText: '继续',
+                cancelButtonText: '取消',
+                type: 'warning'
+            })
+        }catch(e){
+            return
+        }
+        const res = await Api.guestActivate({ username })
+        if (res.code === 2000) {
+            setToken('logintoken', res.data.access)
+            setRefreshToken('refreshtoken', res.data.refresh)
+            await userState.getSystemWebRouter(router)
+            ElMessage.success('游客模式已激活')
+            window.location.href = API_BASE_URL + '/#/'
+        } else {
+            ElMessage.error(res.msg || '游客模式激活失败')
+        }
+    }
+
+    
 
 </script>
 
@@ -158,23 +210,47 @@
 				text-align: center;
 				margin-bottom: 32px;
 				
-				.logo-wrapper {
-					margin: 0 auto 16px;
-					width: 80px;
-					height: 80px;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					background: var(--el-color-primary-light-9);
-					border-radius: 50%;
-					padding: 12px;
-				
-					.logo-image {
-						width: 100%;
-						height: 100%;
-						object-fit: contain;
-					}
-				}
+                .logo-wrapper {
+                    position: relative;
+                    margin: 0 auto 16px;
+                    width: 80px;
+                    height: 80px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: var(--el-color-primary-light-9);
+                    border-radius: 50%;
+                    padding: 12px;
+                
+                    .monogram{
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+
+                    .monogram-svg{
+                        width: 100%;
+                        height: 100%;
+                        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.12));
+                    }
+
+                    .modeplan-logo{
+                        position: absolute;
+                        bottom: -22px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        width: 160px;
+                        height: 40px;
+                    }
+
+                    .modeplan-svg{
+                        width: 100%;
+                        height: 100%;
+                        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.12));
+                    }
+                }
 				
 				.app-name {
 					font-size: 24px;

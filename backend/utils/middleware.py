@@ -19,10 +19,8 @@ from utils.request_util import (
 from django.http import HttpResponseForbidden, HttpResponse
 from config import ALLOW_FRONTEND, FRONTEND_API_LIST, IS_SINGLE_TOKEN
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import (
-    JWTAuthentication,
-    JWTTokenUserAuthentication,
-)
+from utils.jwt_auth import JWTAuthentication
+from rest_framework_simplejwt.authentication import JWTTokenUserAuthentication
 from rest_framework.views import APIView
 from utils.jsonResponse import SuccessResponse, ErrorResponse
 from utils.common import get_parameter_dic
@@ -99,19 +97,19 @@ class ApiLoggingMiddleware(MiddlewareMixin):
 
         user = get_request_user(request)
         request_ip = getattr(request, "request_ip", "unknown")
-        tmpuser = user if not isinstance(user, AnonymousUser) else None
+        tmpuser = user.system_user if not isinstance(user, AnonymousUser) else None
         log_info = {
             "req_ip": request_ip,
             "creator": tmpuser,
             "creator_name": tmpuser.username if tmpuser else "",
-            "dept_belong": getattr(request.user, "dept_id", None),
+            "dept_belong": getattr(tmpuser, "dept_id", None),
             "req_method": request.method,
             "req_path": request.request_path,
             "req_body": body,
             "resp_code": response_data.get("code"),
             "req_os": get_os(request),
             "req_browser": get_browser(request),
-            "req_msg": request.session.get("request_msg"),
+            "req_msg": "", # request.session.get("request_msg"),
             "status": response_data.get("code")
             in [
                 2000,
@@ -322,7 +320,7 @@ class JwtAuthMiddleware(BaseMiddleware):
         if not len(alltoken) == 2:
             return None
 
-        if not alltoken[0] == b"JWTLYADMIN":
+        if not alltoken[0] == b"JWTLEEADMIN":
             return None
 
         parts = alltoken[1].split(b"lee")

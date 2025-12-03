@@ -46,14 +46,14 @@ class FieldPermissionMixin:
         }
         """
         model_name = self.serializer_class.Meta.model.__name__
-        user = request.user
+        system_user = request.user.system_user
 
         # 超级管理员返回全部权限
-        if getattr(user, "is_superuser", False):
+        if getattr(system_user, "is_superuser", False):
             return self.get_all_fields_permission(model_name)
 
         # 普通用户从缓存或数据库获取
-        role_ids = tuple(user.role.values_list("id", flat=True))
+        role_ids = tuple(system_user.role.values_list("id", flat=True))
 
         if FIELD_PERMISSION_CACHE:
             cache_key = self.get_permission_cache_key(model_name, role_ids)

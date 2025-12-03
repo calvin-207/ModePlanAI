@@ -88,7 +88,7 @@
 	.mobile-nav .el-header {background: transparent;border: 0;}
 	.mobile-nav .el-main {padding:0;}
 	.mobile-nav .logo-bar {display: flex;align-items: center;font-weight: bold;font-size: 20px;color: #fff;}
-	.mobile-nav .logo-bar img {width: 30px;height: 30px;margin-right: 10px;}
+    .mobile-nav .logo-bar img {width: 30px;height: 30px;margin-right: 10px;border-radius: 6px;}
 	.mobile-nav .el-submenu__title:hover {background: #fff!important;}
 	.dark .mobile-nav {background: var(--el-bg-color);}
 	.lylybbnmobilenavside:deep(.el-menu-item.is-active)::before{

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+import random
 from datetime import datetime, timedelta
 from captcha.views import CaptchaStore, captcha_image
 from django.utils.translation import gettext_lazy as _
@@ -17,6 +18,7 @@ from django_redis import get_redis_connection
 from django.conf import settings
 from config import IS_SINGLE_TOKEN
 from system.views.system_config import getSystemConfig
+from django.utils import timezone
 
 
 class CaptchaView(CustomAPIView):
@@ -112,16 +114,10 @@ class LoginView(CustomAPIView):
         if not globalUsers:
             return ErrorResponse(msg="账号/密码错误")
 
-        if globalUsers and not globalUsers.is_staff:  # 判断是否允许登录后台
-            msg = "您没有权限登录后台"
-            save_login_log(request=request, status=False, msg=msg, user=globalUsers)
-            return ErrorResponse(msg=msg)
-
         if globalUsers and not globalUsers.is_active:
             msg = "该账号已被禁用"
             save_login_log(request=request, status=False, msg=msg, user=globalUsers)
             return ErrorResponse(msg=msg)
-
         if globalUsers and globalUsers.check_password(
             password
         ):  # check_password() 对明文进行加密,并验证
@@ -143,3 +139,66 @@ class LoginView(CustomAPIView):
             msg = "账号/密码错误"
             save_login_log(request=request, status=False, msg=msg, user=globalUsers)
             return ErrorResponse(msg=msg)
+
+
+class GuestActivateView(CustomAPIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        username = request.data.get("username", None)
+        if not username or not isinstance(username, str) or len(username) < 3:
+            return ErrorResponse(msg="username不合法")
+
+        globalUsers = GlobalUsers.objects.filter(username=username).first()
+        created_global = False
+        if not globalUsers:
+            globalUsers = GlobalUsers(username=username, is_active=True, is_guest=True, name=username)
+            globalUsers.set_unusable_password()
+            globalUsers.save()
+            created_global = True
+
+        from system.models import Users, Role
+
+        role = Role.objects.filter(key="guest").first()
+        if not role:
+            role = Role.objects.create(name="游客", key="guest", sort=999, status=True)
+
+        tenant_user = Users.objects.filter(username=username).first()
+        if not tenant_user:
+            name = f'游客{random.randint(1000, 9999)}'
+            tenant_user = Users.objects.create(
+                username=username,
+                name=name,
+                identity=1,
+                is_active=True,
+            )
+        tenant_user.role.add(role)
+        tenant_user.save()
+
+        from tenants.models import GlobalUserClientRelation
+
+        client = getattr(request, "tenant", None)
+        if client:
+            relation = GlobalUserClientRelation.objects.filter(client=client, globalUsers=globalUsers).first()
+            if not relation:
+                relation = GlobalUserClientRelation.objects.create(
+                    client=client,
+                    globalUsers=globalUsers,
+                    system_user_id=tenant_user.id,
+                    is_active=True,
+                    active_datetime=timezone.now(),
+                )
+            else:
+                relation.system_user_id = tenant_user.id
+                relation.is_active = True
+                relation.active_datetime = timezone.now()
+                relation.save()
+
+        globalUsers.system_user_id = tenant_user.id
+        globalUsers.save()
+
+        data = LoginSerializer.get_token(globalUsers)
+        return DetailResponse(data=data, msg="游客激活成功")
+
+

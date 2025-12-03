@@ -65,13 +65,13 @@ class CustomModelSerializer(ModelSerializer):
                 if self.modifier_field_id in model_fields:
                     validated_data[self.modifier_field_id] = self.get_request_user_id()
                 if self.creator_field_id in model_fields:
-                    validated_data[self.creator_field_id] = self.request.user
+                    validated_data[self.creator_field_id] = self.request.user.system_user
                 if (
                     self.dept_belong_id_field_name in model_fields
                     and not validated_data.get(self.dept_belong_id_field_name, None)
                 ):
                     validated_data[self.dept_belong_id_field_name] = getattr(
-                        self.request.user, "dept_id", None
+                        self.request.user.system_user, "dept_id", None
                     )
         return super().create(validated_data)
 
@@ -89,15 +89,15 @@ class CustomModelSerializer(ModelSerializer):
 
     def get_request_username(self):
         if getattr(self.request, "user", None):
-            return getattr(self.request.user, "username", None)
+            return getattr(self.request.user.system_user, "username", None)
         return None
 
     def get_request_name(self):
         if getattr(self.request, "user", None):
-            return getattr(self.request.user, "name", None)
+            return getattr(self.request.user.system_user, "name", None)
         return None
 
     def get_request_user_id(self):
         if getattr(self.request, "user", None):
-            return getattr(self.request.user, "id", None)
+            return getattr(self.request.user.system_user, "id", None)
         return None
