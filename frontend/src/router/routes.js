@@ -37,14 +37,25 @@ export const CustomStaticRoutes = [
     },
   },
   {
-    path: "/figma-preview",
-    name: "FigmaPreview",
-    component: () => import("@/views/system/figma/preview.vue"),
+    path: "/ai-planner",
+    name: "AIPlanner",
+    component: () => import("@/views/modeplan/PlannerAI.vue"),
     meta: {
-      title: "Figma预览",
+      title: "AI 企划专家",
       requireAuth: true,
       hidden: false,
-      icon: 'Picture',
+      icon: 'ChatDotRound',
+    },
+  },
+  {
+    path: "/trend-analysis",
+    name: "TrendAnalysis",
+    component: () => import("@/views/system/trend/analysis.vue"),
+    meta: {
+      title: "趋势分析",
+      requireAuth: true,
+      hidden: false,
+      icon: 'TrendCharts',
     },
   },
   // {

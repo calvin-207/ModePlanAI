@@ -21,6 +21,13 @@ from functools import reduce
 from django.db.models import Q
 from django.core.cache import cache
 from config import DATA_FILTER_CACHE, DATA_FILTER_CAHCE_TIME
+from datetime import datetime, time
+
+
+def filter_day_combine_time(queryset, name, value):
+    # print('day_combine_time', name, value)
+    end_of_day = datetime.combine(value, time(23, 59, 59, 999999))
+    return queryset.filter(**{f"{name}__lte": end_of_day})
 
 
 def get_dept_children_ids(dept_id, include_self=False):

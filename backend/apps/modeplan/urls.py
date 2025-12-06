@@ -1,7 +1,14 @@
 from django.urls import path
-from .views import FigmaReadView
+from rest_framework import routers
+from .views import MConversationsViewSet,MConversationsLogViewSet, ChatAPIView
+
+system_url = routers.SimpleRouter()
+
+system_url.register(r'conversations', MConversationsViewSet, basename='MConversations')
+system_url.register(r'conversationLogs', MConversationsLogViewSet, basename='MConversationLog')
 
 urlpatterns = [
-    path("figma/read/", FigmaReadView.as_view()),
+    path("chat/", ChatAPIView.as_view()),
 ]
 
+urlpatterns += system_url.urls
