@@ -270,4 +270,8 @@ Api.delOwnMessage = (params) =>
 Api.readOwnMessage = (params) =>
   ajaxPost({ url: `/api/system/msg/readownmsg/`, params });
 
+// AI对话
+Api.modeplanChat = (params, headers) =>
+  ajaxPost({ url: `/api/modeplan/chat/`, params, headers });
+
 export default Api;
