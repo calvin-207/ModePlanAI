@@ -3,6 +3,7 @@ import base64
 import random
 from datetime import datetime, timedelta
 from captcha.views import CaptchaStore, captcha_image
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -174,7 +175,7 @@ class GuestActivateView(CustomAPIView):
                 name=name,
                 identity=1,
                 is_active=True,
-                dept_id= Dept.objects.filter(parent__isnull=True).order_by("-sort").first().id,
+                dept_id= Dept.objects.filter(Q(parent__isnull=True) | Q(parent_id=0)).order_by("-sort").first().id,
             )
         tenant_user.role.add(role)
         tenant_user.save()

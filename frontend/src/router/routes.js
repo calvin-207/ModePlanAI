@@ -58,6 +58,17 @@ export const CustomStaticRoutes = [
       icon: 'TrendCharts',
     },
   },
+  {
+    path: "/inspiration-gallery",
+    name: "InspirationGallery",
+    component: () => import("@/views/gallery/inspiration.vue"),
+    meta: {
+      title: "灵感图库",
+      requireAuth: true,
+      hidden: false,
+      icon: 'Picture',
+    },
+  },
   // {
   // 	path: "/home",
   // 	name: 'home',

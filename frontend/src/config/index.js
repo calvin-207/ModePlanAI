@@ -20,7 +20,7 @@ export default {
   APP_NAME: "ModePlanAI",
 
   //是否开启多标签
-  ISMULTITABS: true,
+  ISMULTITABS: false,
 
   //Token前缀，注意最后有个空格，如不需要需设置空字符串
   TOKEN_PREFIX: "JWT ",

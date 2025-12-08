@@ -113,16 +113,14 @@
 
  <script setup>
  import { ref, reactive, nextTick, onMounted } from 'vue'
-import Api from '@/api/conversation'
+ import Api from '@/api/api'
  import { ElMessage } from 'element-plus'
  import { ChatLineSquare, User, Promotion, CopyDocument, RefreshRight, VideoPause } from '@element-plus/icons-vue'
 
  const model = ref('gpt-4')
-const input = ref('')
-const sending = ref(false)
-const chatBodyRef = ref(null)
-const conversationId = ref('')
-let abortCtl = null
+ const input = ref('')
+ const sending = ref(false)
+ const chatBodyRef = ref(null)
 
   const messages = ref([
     {
@@ -176,10 +174,6 @@ let abortCtl = null
   }
 
   function stop(){
-    if(abortCtl){
-      abortCtl.abort()
-      abortCtl = null
-    }
     sending.value = false
   }
 
@@ -211,49 +205,21 @@ let abortCtl = null
    input.value = ''
    messages.value.push({ role: 'user', content })
    sending.value = true
-   const assistant = { role: 'assistant', content: '' }
-   messages.value.push(assistant)
    try {
-     const { controller, responsePromise } = Api.postChatStream({ question: content, conversation_id: conversationId.value || undefined })
-     abortCtl = controller
-     const resp = await responsePromise
-     if(!resp.ok || !resp.body){
-       ElMessage.warning('对话失败')
-       return
+     const payload = {
+       model: model.value,
+       messages: messages.value.map(m => ({ role: m.role, content: m.content }))
      }
-     const reader = resp.body.getReader()
-     const decoder = new TextDecoder()
-     let done = false
-     let buffer = ''
-     while(!done){
-       const { value, done: d } = await reader.read()
-       done = d
-       if(value){
-         buffer += decoder.decode(value, { stream: true })
-         const parts = buffer.split(/\r?\n/)
-         buffer = parts.pop() || ''
-         for(const line of parts){
-           const t = line.trim()
-           if(!t) continue
-           try{
-             const obj = JSON.parse(t)
-             if(typeof obj.answer === 'string'){
-               assistant.content = obj.answer
-             }
-             if(obj.conversation_id){
-               conversationId.value = obj.conversation_id
-             }
-           }catch(_){
-           }
-         }
-         await nextTick()
-         scrollToBottom()
-       }
+     const res = await Api.modeplanChat(payload)
+     if (res && (res.code === 2000 || res.code === 0)) {
+       const reply = res.data?.content || res.data?.message || res.data || ''
+       messages.value.push({ role: 'assistant', content: String(reply) })
+     } else {
+       ElMessage.warning(res?.msg || '对话失败')
      }
    } catch (e) {
      ElMessage.error('对话接口异常')
    } finally {
-     abortCtl = null
      sending.value = false
      await nextTick()
      scrollToBottom()
