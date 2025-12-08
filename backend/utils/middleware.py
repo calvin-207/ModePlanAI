@@ -93,7 +93,10 @@ class ApiLoggingMiddleware(MiddlewareMixin):
     def _create_operation_log(self, request, response):
         """创建操作日志"""
         body = self._mask_sensitive_data(getattr(request, "request_data", {}))
-        response_data = self._get_response_data(response)
+        try:
+            response_data = self._get_response_data(response)
+        except Exception:
+            response_data = {}
 
         user = get_request_user(request)
         request_ip = getattr(request, "request_ip", "unknown")

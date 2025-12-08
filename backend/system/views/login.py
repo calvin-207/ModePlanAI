@@ -6,6 +6,7 @@ from captcha.views import CaptchaStore, captcha_image
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from system.views.dept import DeptViewSet
 from tenants.models import GlobalUsers
 from utils.apiview import CustomAPIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -167,11 +168,13 @@ class GuestActivateView(CustomAPIView):
         tenant_user = Users.objects.filter(username=username).first()
         if not tenant_user:
             name = f'游客{random.randint(1000, 9999)}'
+            from system.models import Dept
             tenant_user = Users.objects.create(
                 username=username,
                 name=name,
                 identity=1,
                 is_active=True,
+                dept_id= Dept.objects.filter(parent__isnull=True).order_by("-sort").first().id,
             )
         tenant_user.role.add(role)
         tenant_user.save()

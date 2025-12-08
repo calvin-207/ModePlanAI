@@ -27,7 +27,7 @@ class ChatAPIView(CustomAPIView):
 
 
     def post(self, request, *args, **kwargs):
-        user = request.user
+        system_user = request.user.system_user
         try:
             data = request.body.decode('utf-8')
             data = json.loads(data)
@@ -48,7 +48,7 @@ class ChatAPIView(CustomAPIView):
 
             else:
                 conversation_id = uuid.uuid4().hex
-                mConversation = MConversation.objects.create(code=conversation_id, creator=user)
+                mConversation = MConversation.objects.create(code=conversation_id, creator=system_user)
 
                 beginMConversationLog=MConversationLog(
                     role = 'system',
